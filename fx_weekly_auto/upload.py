@@ -30,6 +30,7 @@ GITHUB_REPO   = "fx-weekly"
 GITHUB_BRANCH = "main"
 OUTPUT_DIR    = Path(os.environ.get("FX_OUTPUT_DIR", "./output"))
 API_BASE      = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents"
+FORCE_REUPLOAD = os.environ.get("FORCE_REUPLOAD", "false").lower() == "true"
 
 
 # ── 최신 docx 파일 찾기 ───────────────────────────────────────
@@ -335,10 +336,13 @@ def main():
         date_str = f"{date_str_raw[:4]}.{date_str_raw[4:6]}.{date_str_raw[6:]}"
         html_filename = f"FX_Weekly_{date_str_raw}.html"
 
-        # 이미 GitHub에 올라간 파일은 스킵
+        # 이미 GitHub에 올라간 파일 처리
         if html_filename in existing_filenames:
-            print(f"  ⏭️  스킵 (이미 업로드됨): {html_filename}")
-            continue
+            if FORCE_REUPLOAD:
+                print(f"  🔄 덮어쓰기: {html_filename}")
+            else:
+                print(f"  ⏭️  스킵 (이미 업로드됨): {html_filename}")
+                continue
 
         # HTML 변환 후 업로드
         print(f"  🔄 변환 중: {docx_path.name}")

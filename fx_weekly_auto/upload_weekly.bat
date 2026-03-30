@@ -1,11 +1,9 @@
 @echo off
 SET FX_OUTPUT_DIR=C:\Users\infomax\Downloads
-SET FORCE_REUPLOAD=true
+SET FORCE_REUPLOAD=false
 
 IF "%GITHUB_TOKEN%"=="" (
     echo ERROR: GITHUB_TOKEN is not set.
-    echo Please run: setx GITHUB_TOKEN ghp_xxxxxxxxxxxxxxxxxxxx
-    echo Then restart this window and try again.
     pause
     exit /b 1
 )
