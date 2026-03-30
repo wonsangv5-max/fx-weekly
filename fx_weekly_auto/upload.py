@@ -128,6 +128,18 @@ def docx_to_html(docx_path: Path) -> str:
     padding: 48px 56px;
     box-shadow: 0 2px 24px rgba(0,0,0,0.10);
   }}
+  .back-btn {{
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 7px 16px;
+    background: #1B3A6B;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 4px;
+  }}
+  .back-btn:hover {{ background: #142d54; }}
   h1.title {{
     font-size: 28px;
     font-weight: 800;
@@ -200,6 +212,7 @@ def docx_to_html(docx_path: Path) -> str:
 </head>
 <body>
 <div class="container">
+<a class="back-btn" href="https://{GITHUB_USER}.github.io/{GITHUB_REPO}/">← 목록으로</a>
 {body_content}
 <div class="footer">※ 본 보고서는 공개된 뉴스를 바탕으로 작성된 정보 제공용 자료입니다. 투자 판단의 근거로 활용 시 별도 전문가 확인을 권장합니다.</div>
 </div>
