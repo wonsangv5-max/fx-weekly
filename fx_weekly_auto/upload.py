@@ -289,6 +289,14 @@ def get_existing_reports() -> list:
     return result
 
 
+# ── 모든 docx 파일 찾기 ──────────────────────────────────────
+def find_all_docx() -> list:
+    files = sorted(OUTPUT_DIR.glob("FX_Weekly_*.docx"), reverse=True)
+    if not files:
+        raise FileNotFoundError(f"output 폴더에 FX_Weekly_*.docx 파일이 없습니다: {OUTPUT_DIR}")
+    return files
+
+
 # ── 메인 ──────────────────────────────────────────────────────
 def main():
     if not GITHUB_TOKEN:
@@ -296,36 +304,50 @@ def main():
         print("   set GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx")
         return
 
-    # 최신 docx 찾기
-    docx_path = find_latest_docx()
-    print(f"📄 파일 발견: {docx_path.name}")
-
-    # HTML 변환
-    print("🔄 HTML 변환 중...")
-    html_content = docx_to_html(docx_path)
-
-    # 날짜 추출
-    m = re.search(r'(\d{8})', docx_path.name)
-    date_str_raw = m.group(1) if m else datetime.today().strftime("%Y%m%d")
-    date_str = f"{date_str_raw[:4]}.{date_str_raw[4:6]}.{date_str_raw[6:]}"
-    html_filename = f"FX_Weekly_{date_str_raw}.html"
-
-    # 보고서 업로드
-    print(f"⬆️  GitHub 업로드 중: {html_filename}")
-    github_upload(html_filename, html_content, f"Add FX Weekly {date_str}")
-
-    # 인덱스 업데이트
-    print("📋 인덱스 페이지 업데이트 중...")
+    # GitHub에 이미 올라간 파일 목록 확인
+    print("📋 GitHub 기존 파일 확인 중...")
     existing = get_existing_reports()
-    # 현재 파일이 목록에 없으면 추가
-    if not any(f == html_filename for f, _ in existing):
-        existing.insert(0, (html_filename, date_str))
-    index_html = build_index(existing)
-    github_upload("index.html", index_html, f"Update index for {date_str}")
+    existing_filenames = [f for f, _ in existing]
 
-    print(f"\n✅ 업로드 완료!")
-    print(f"🌐 보고서: https://{GITHUB_USER}.github.io/{GITHUB_REPO}/{html_filename}")
-    print(f"📋 목록:   https://{GITHUB_USER}.github.io/{GITHUB_REPO}/")
+    # 다운로드 폴더의 모든 docx 파일 찾기
+    all_docx = find_all_docx()
+    print(f"📁 로컬 파일 {len(all_docx)}개 발견\n")
+
+    uploaded = []
+    for docx_path in all_docx:
+        m = re.search(r'(\d{8})', docx_path.name)
+        if not m:
+            continue
+        date_str_raw = m.group(1)
+        date_str = f"{date_str_raw[:4]}.{date_str_raw[4:6]}.{date_str_raw[6:]}"
+        html_filename = f"FX_Weekly_{date_str_raw}.html"
+
+        # 이미 GitHub에 올라간 파일은 스킵
+        if html_filename in existing_filenames:
+            print(f"  ⏭️  스킵 (이미 업로드됨): {html_filename}")
+            continue
+
+        # HTML 변환 후 업로드
+        print(f"  🔄 변환 중: {docx_path.name}")
+        html_content = docx_to_html(docx_path)
+        print(f"  ⬆️  업로드 중: {html_filename}")
+        github_upload(html_filename, html_content, f"Add FX Weekly {date_str}")
+        uploaded.append((html_filename, date_str))
+
+    if not uploaded:
+        print("\n✅ 새로 업로드할 파일이 없습니다. 모두 이미 업로드되어 있어요.")
+    else:
+        # 인덱스 업데이트
+        print("\n📋 인덱스 페이지 업데이트 중...")
+        updated_existing = get_existing_reports()
+        index_html = build_index(updated_existing)
+        github_upload("index.html", index_html, f"Update index")
+
+        print(f"\n✅ 업로드 완료! ({len(uploaded)}개)")
+        for fname, dstr in uploaded:
+            print(f"  🌐 https://{GITHUB_USER}.github.io/{GITHUB_REPO}/{fname}")
+
+    print(f"\n📋 목록: https://{GITHUB_USER}.github.io/{GITHUB_REPO}/")
 
 
 if __name__ == "__main__":
