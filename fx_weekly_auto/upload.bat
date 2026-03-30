@@ -1,5 +1,5 @@
 @echo off
-SET FX_OUTPUT_DIR=%~dp0output
+SET FX_OUTPUT_DIR=C:\Users\infomax\Downloads
 
 IF "%GITHUB_TOKEN%"=="" (
     echo ERROR: GITHUB_TOKEN is not set.
